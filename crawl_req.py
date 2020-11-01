@@ -26,6 +26,7 @@ async def request_callback(url):
 async def get(html):
     raw_html = BeautifulSoup(html, 'html.parser')
     full_links = [link.get('href') for link in raw_html.select("body a")]
+
     task = [asyncio.ensure_future(request_callback(link1)) for link1 in set(full_links)]
 
     await extract(raw_html, html)
