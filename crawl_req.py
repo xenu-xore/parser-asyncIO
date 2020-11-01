@@ -9,36 +9,36 @@ HOST = 'https://habr.com/ru'
 async def request_callback(url):
     async with aiohttp.ClientSession() as session:
         try:
+
             async with session.get(url) as response:
                 text = await asyncio.create_task(response.text())
-
                 await asyncio.create_task(get(text))
                 await asyncio.wait(text)
+                await response.close()
+
         finally:
             async with session.get(HOST + url) as response:
                 text = await asyncio.create_task(response.text())
-
                 await asyncio.create_task(get(text))
                 await asyncio.wait(text)
+                await response.close()
 
 
 #    asyncio.as_completed(
 async def get(html):
     raw_html = BeautifulSoup(html, 'html.parser')
     full_links = [link.get('href') for link in raw_html.select("body a")]
-
     task = [asyncio.ensure_future(request_callback(link1)) for link1 in set(full_links)]
-
     await extract(raw_html, html)
     await asyncio.wait(task)
 
 
-async def extract(content, html_):
+async def extract(html_bs4, html_lxml):
     try:
-        xpath_html = lxml.html.fromstring(html_)
+        xpath_html = lxml.html.fromstring(html_lxml)
         h1_extract = xpath_html.xpath('//h1/text()')[0]
-        h2_extract = content.find('h2').get_text(strip=True)
-        #text_all_extract=content.get_text(strip=False)
+        h2_extract = html_bs4.find('h2').get_text(strip=True)
+        #    text_all_extract=content.get_text(strip=False)
 
     except Exception as e:
         return e
